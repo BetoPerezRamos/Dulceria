@@ -1,0 +1,593 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+   		<meta charset="utf-8">
+		<title>Dulces "Dayis" </title>
+        <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css">
+		<link href="css/bootstrap.css" rel='stylesheet' type='text/css' />
+		<!-- jQuery (necesario para utilizar los JavaScrip de Boostrap) -->
+		<script src="js/jquery.min.js"></script>
+        
+        <script src="js/jquery-1.11.3.min.js"></script>
+		<script src="js/jquery.mobile-1.4.5.min.js"></script>
+		<script src="cordova.js"></script>
+        
+		 <!-- El archivo de nuestro tema -->
+		<link href="css/theme-style.css" rel='stylesheet' type='text/css' />
+   		 <!--  -->
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script type="application/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); function hideURLbar(){ window.scrollTo(0,1); } </script>
+		
+        <!--AQUI SE CREA LA BASE DE DATOS-->
+        
+        	<script type="text/javascript" charset="utf-8">
+
+        // Wait for Cordova to load
+        //
+		document.addEventListener("deviceready", onDeviceReady, false); //permite monitorear los metodos escuchantes .. "deviceready" escucha cuando el documento esta listo
+		$("#tblDiv").hide();
+		var currentRow;
+		// Creando las tablas de la base de datos
+        //
+		function populateDB(tx) {  //tx es el objeto de conexion
+			alert("BASE DE DATOS CORRECTA!");
+			tx.executeSql('CREATE TABLE IF NOT EXISTS productos (id_producto INTEGER PRIMARY KEY AUTOINCREMENT, nombre, precio INTEGER, marca, descripcion)'); 
+
+			//tx.executeSql('SELECT * FROM examen', [], querySuccess, errorCB); // (seleccionar,generar arreglo, si esta bien ir a, si no ir a)
+		}
+		// Query the database
+        //
+		function queryDB(tx) {
+			
+			tx.executeSql('SELECT * FROM productos', [], querySuccess, errorCB);
+			}
+			
+		function searchQueryDB(tx) {
+			tx.executeSql("SELECT * FROM productos where nombre like ('%"+ document.getElementById("txtName").value + "%')",[], querySuccess, errorCB);
+				}
+				// Query the success callback
+        //
+		function querySuccess(tx, results) { //tx:objeto de conexion, elementos resultantes de la seleccion)
+			//var tblText='<table border=0 id="t01"><tr><th>ID</th> <th>Materia</th> <th>Unidad</th></tr>';
+			var tblText='<table border=1 id="t01"><tr> <th>ID</th> <th>Nombre</th> <th>Precio</th> <th>Marca</th> <th>Descripcion</th></tr>';
+			var len = results.rows.length; //rows: cantidad de registros en el arreglo creado
+			if (len==0){
+				alert("ENTRÓ");
+				tx.executeSql('INSERT INTO productos (nombre, precio,marca,descripcion) VALUES ("Paleta Payaso", "20","Ricolino","50gr")');
+			}
+			for (var i = 0; i < len; i++) { //llenado de la tabla
+				var tmpArgs=
+				results.rows.item(i).id_producto + ",'"+
+				results.rows.item(i).nombre
+				+ "','" + results.rows.item(i).precio+
+				"','" + results.rows.item(i).marca+
+				"','" + results.rows.item(i).descripcion+"'";
+				tblText +='<tr onclick="goPopup('+ tmpArgs + ');"><td>'
+				 + results.rows.item(i).id_producto +'</td><td>'
+				 + results.rows.item(i).nombre +'</td><td>'
+				 + results.rows.item(i).precio +'</td><td>'
+				 +results.rows.item(i).marca +'</td><td>'
+				 +results.rows.item(i).descripcion +'</td></tr>';
+				}
+				tblText +="</table>";
+				document.getElementById("tblDiv").innerHTML =tblText;
+        }
+		//Delete query
+		function deleteRow(tx) {
+			tx.executeSql('DELETE FROM productos WHERE id_producto = ' + currentRow, [], queryDB, errorCB);
+			}
+        // Transaction error callback
+        //
+		function errorCB(err) {
+			alert("Ups! Esto es bochornoso: "+err.code);
+        }
+		// Transaction success callback
+        //
+		function successCB() {
+			
+			//sqlitePlugin.openDatabase
+			var db = window.openDatabase("Database", "1.0", "Database", 100000);
+			db.transaction(queryDB, errorCB);
+			}
+			// Cordova is ready
+        //
+		function onDeviceReady() {
+			var db = window.openDatabase("Database", "1.0", "Database", 100000); //crea la base de datos
+			db.transaction(populateDB, errorCB, successCB);  //transaction permite ejecutar acciones en la base de datos.. transaction(nom funcion a ejecutar, funcion que se llama en caso de error, funcion en caso de que este bien)
+			}
+			//Insert query
+        //
+		function insertDB(tx) {
+			tx.executeSql('INSERT INTO productos (nombre,precio,marca,descripcion) VALUES ("'+document.getElementById("txtName").value+'","'+document.getElementById("txtNumber").value+'","'+document.getElementById("txtMarca").value+'","'+document.getElementById("txtDescrip").value+'")');
+			alert("Has agregado un producto!");
+		}
+		
+		function goInsert() {
+			var db = window.openDatabase("Database", "1.0", "Database", 100000);
+			db.transaction(insertDB, errorCB, successCB);
+		}
+		
+		function goSearch() {
+			var db = window.openDatabase("Database", "1.0", "Database", 100000);
+			db.transaction(searchQueryDB, errorCB);
+		}
+		function goDelete() {
+			var db = window.openDatabase("Database", "1.0", "Database", 100000);
+			db.transaction(deleteRow, errorCB);
+			document.getElementById('qrpopup').style.display='none';
+		}
+        //Show the popup after tapping a row in table
+        //
+		function goPopup(row,rowname,rownum) { //funcion que despliega los elemntos que seleccionaste, recibe tres cosas: fila, nombre fila, numero de fila
+			currentRow=row;
+			document.getElementById("qrpopup").style.display="block"; //hace que se muestre sobre la pantalla principal
+			document.getElementById("editNameBox").value = rowname; // muestra el nombre del producto
+			document.getElementById("editNumberBox").value = rownum; //muestra el precio
+			document.getElementById("editMarcaBox").value = rowmarca; // muestra la marca
+			document.getElementById("editDescripBox").value = rowdescrip; // muestra la descripcion
+        }
+		
+		function editRow(tx) {
+			tx.executeSql('UPDATE productos SET nombre ="'+document.getElementById("editNameBox").value+'", precio= "'+document.getElementById("editNumberBox").value+'", marca="'+document.getElementById("editMarcaBox").value+'", descripcion="'+document.getElementById("editDescripBox").value+ '" WHERE id_producto = '+ currentRow, [], queryDB, errorCB);
+			alert("Lo has modificado!");
+		}
+		
+		function goEdit() {
+				var db = window.openDatabase("Database", "1.0", "Database", 100000);
+				db.transaction(editRow, errorCB);
+				document.getElementById('qrpopup').style.display='none';
+		}
+		function ocultar(){
+			$("#tblDiv").hide();
+			$("#btnoculto").hide();
+			
+		}
+		function mostrar(){
+			$("#tblDiv").show();
+			$("#btnoculto").show();			
+			
+		}
+		function verCampos(){
+			$("#campos").toggle();
+		}
+</script>
+        
+        
+        <!--AQUI TERMINA LA CREACIÓN DE LA BASE DE DATOS-->
+        
+        </script>
+		<!----font-Awesome "dar estilo a los textos"----->
+   		<link rel="stylesheet" href="fonts/css/font-awesome.min.css">
+   		<!----font-Awesome----->
+		<!----webfonts "dar estilo a los textos una vez conectado a internet"---->
+		<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700,800' rel='stylesheet' type='text/css'>
+		<!----//webfonts---->
+		<!---- SCRIP PARA EL MANEJO DEL NAV SUPERIOR start-top-nav-script---->
+		<script>
+			$(function() {
+				var pull 		= $('#pull');
+					menu 		= $('nav ul');
+					menuHeight	= menu.height();
+				$(pull).on('click', function(e) {
+					e.preventDefault();
+					menu.slideToggle();
+				});
+				$(window).resize(function(){
+	        		var w = $(window).width();
+	        		if(w > 320 && menu.is(':hidden')) {
+	        			menu.removeAttr('style');
+	        		}
+	    		});
+			});
+		</script>
+		<!----// AQUI TERMINA EL SCRIP DEL NAV SUPERIOR End-top-nav-script---->
+		<!---- SCRIP PARA EL MANEJO DEL SLIDE PRINCIPAL start-slider-script---->
+			<script src="js/responsiveslides.min.js"></script>
+			 <script>
+			    // You can also use "$(window).load(function() {"
+			    $(function () {
+			      // LOS DIV CON ID=Slideshow 4
+			      $("#slider4").responsiveSlides({
+			        auto: true,
+			        pager: true,
+			        nav: true,
+			        speed: 500,
+			        namespace: "callbacks",
+			        before: function () {
+			          $('.events').append("<li>before event fired.</li>");
+			        },
+			        after: function () {
+			          $('.events').append("<li>after event fired.</li>");
+			        }
+			      });
+			
+			    });
+			  </script>
+			<!----//AQUI TERMINA EL SCRIP PARA EL MANEJO DEL SLIDE PRINCIPALEnd-slider-script---->
+            
+			<!---- JAVASCRIPT's PARA EL MANEJO DE LOS Slider ------>
+	 <link rel="stylesheet" href="css/slider.css" type="text/css" />
+	<script type="text/javascript" src="js/jquery.cslider.js"></script>
+	<script type="text/javascript" src="js/modernizr.custom.28468.js"></script>
+	<script type="text/javascript">
+			$(function() {
+			
+				$('#da-slider').cslider({
+					autoplay	: true,
+					bgincrement	: 450
+				});
+			
+			});
+		</script>	
+		<script type="text/javascript">
+			$(function() {
+			
+				$('#da-slider1').cslider({
+					autoplay	: true,
+					bgincrement	: 450
+				});
+			
+			});
+		</script>	
+</head>
+	<body>
+        <div id="qrpopup" >
+          <hr/>
+          Nombre:
+          <input type="text" id="editNameBox">
+          <br>
+          Precio:
+          <input type="text" id="editNumberBox">
+          <br>
+          Marca:
+          <input type="text" id="editMarcaBox">
+          <br>
+          Descripción:
+          <input type="text" id="editDescripBox">
+          <br>
+          <button onclick="goDelete()">Eliminar</button>
+          <button onclick="goEdit()">Modificar</button>
+          <button onclick="document.getElementById('qrpopup').style.display='none';">Cancelar </button>
+   	   </div>
+		<!-----COMIENZO DEL ENCABEZADO SUPERIOR start-top-header----->
+		<div id="hello" class="top-header">
+		<!-- ESTE ES EL Slideshow 4 -->
+			    <div  id="top" class="callbacks_container">
+			      <ul class="rslides" id="slider4">
+			        <li>
+			          <img src="images/slide.jpg" alt="">
+			          <div class="caption text-center">
+			          	<div class="slide-text-info">
+			          		<h1>Dulces y Más</h1>
+			          		<div class="slide-text-info-btns">
+			          			<a class="apple" href="#"><span> </span></a>
+			          			<a class="play-btn" href="#"><span> </span></a>
+			          		</div>
+			          	</div>
+			          </div>
+			        </li>
+			        <li>
+			          <img src="images/slide4.jpg" alt="">
+			          <div class="caption text-center">
+			          	<div class="slide-text-info">
+			          		<h1>El mejor surtido</h1>
+			          		<div class="slide-text-info-btns">
+			          			<a class="apple" href="#"><span> </span></a>
+			          			<a class="play-btn" href="#"><span> </span></a>
+			          		</div>
+			          	</div>
+			          </div>
+			        </li>
+			        <li>
+			          <img src="images/slide3.jpg" alt="">
+			           <div class="caption text-center">
+			           	<div class="slide-text-info">
+			          		<h1>Los mejores Precios</h1>
+			          		<div class="slide-text-info-btns">
+			          			<a class="apple" href="#"><span> </span></a>
+			          			<a class="play-btn" href="#"><span> </span></a>
+			          		</div>
+			          	</div>
+			          </div>
+			        </li>
+			      </ul>
+			    </div>
+			    <div class="clear"> </div>
+			<!---- FIN DEL Slideshow4//End-slider----->
+		<!-----start-conatiner---->
+		<div class="container">
+			<!-----start-header---->
+			<div class="header">
+				<div class="container">
+				<div class="logo">
+					<a href="#fea">Dayis</a>
+				</div>
+				<!----start-top-nav---->
+				 <nav class="top-nav">
+					<ul class="top-nav">
+						<li class="active"><a href="#hello" class="scroll">Inicio</a></li>						
+						<li class="page-scroll"><a href="#share" class="scroll">Ofertas</a></li>
+						<li class="page-scroll"><a href="#fea" class="scroll">Precios</a></li>
+						<li class="page-scroll"><a href="#gall" class="scroll">Galeria</a></li>
+                        <li class="page-scroll"><a href="#over" class="scroll">Sobre nosotros</a></li>
+						<!--<li class="contatct-active" class="page-scroll"><a href="#down" class="scroll">Marcas </a></li>
+						<li class="page-scroll"><a href="#comp" class="scroll">Desarrolladores</a></li>-->
+					</ul>
+					<a href="#" id="pull"><img src="images/nav-icon.png" title="menu" /></a>
+				  </nav>
+				
+				<div class="clear"> </div>
+			</div>
+			<!-----//End-header---->
+			</div>
+			<!-----start-top-header----->
+		</div>
+		</div>
+		
+		<!-----DIV DE OFERTAS----->
+		<div id="share" class="Share-instantly">
+			<div class="container">
+				<div class="col-md-5 Share-instantly-left">
+					<span style="width:300px; height:200px"> </span>
+				</div>
+				<div class="col-md-7 Share-instantly-right">
+					<h3>Ofertas</h3>
+					<p class="head-para">Pensando en nuestros clientes, tenemos ofertas todos los días en las mejores marcas.</p>
+					<!----- CON ESTE SCRIPT SE MANEJARÁ EL SLIDER DEL DIV DE OFERTAS---->
+					 <!-- -->
+						<link href="css/owl.carousel.css" rel="stylesheet">
+					    <script src="js/owl.carousel.js"></script>
+					    <script>
+						    $(document).ready(function() {
+						      $("#owl-demo , #owl-demo1").owlCarousel({
+						        items : 1,
+						        lazyLoad : true,
+						        autoPlay : true,
+						      });
+						    });
+					    </script>
+					    <script>
+						    $(document).ready(function() {
+						      $("#owl-demo3").owlCarousel({
+						        items : 4,
+						        lazyLoad : true,
+						        autoPlay : true,
+						        navigation: false,
+						        pagination: false,
+						      });
+						    });
+					    </script>
+					<!----- TERMINA EL SCRIPT DEL MANEJADOR DEL SLIDER---->
+					<!-- COMIENZA EL DIV DE LOS DIS's QUE MOSTRARAN LAS OFERTAS -->
+					     <div class="slider">
+						  	 <div id="da-slider" class="da-slider">
+								<div class="da-slide">
+								  <div class="da-img"><img src="images/share-slide-pic.png" class="img-responsive" alt=" " /></div>
+								  <div class="slide-text">
+									 <p>Primer oferta del día</p>
+								  </div>
+								  <div class="clear"></div>
+								</div>
+								<div class="da-slide">
+								  <div class="da-img"><img src="images/share-slide-pic.png"   class="img-responsive" alt=" " /></div>
+								  <div class="slide-text">
+									  <p>Segunda oferta del día.</p>
+								  </div>
+								  <div class="clear"></div>
+								</div>
+								<div class="da-slide">
+								  <div class="da-img"><img src="images/share-slide-pic.png"  class="img-responsive" alt=" " /></div>
+								  <div class="slide-text">
+									  <p>Tercera oferta del día.</p>
+								  </div>
+								  <div class="clear"></div>
+								</div>
+                                <div class="da-slide">
+								  <div class="da-img"><img src="images/share-slide-pic.png"  class="img-responsive" alt=" " /></div>
+								  <div class="slide-text">
+									  <p>Cuarta oferta del día.</p>
+								  </div>
+								  <div class="clear"></div>
+								</div>
+                                <div class="da-slide">
+								  <div class="da-img"><img src="images/share-slide-pic.png"  class="img-responsive" alt=" " /></div>
+								  <div class="slide-text">
+									  <p>Quinta oferta del día.</p>
+								  </div>
+								  <div class="clear"></div>
+								</div>
+							 </div>
+						</div>
+				</div>
+				<div class="clearfix"> </div>
+			</div>
+		</div>
+		<div class="clearfix"> </div>
+		<!-----TERMINA EL DIV DE LAS OFERTAS----->
+		<!-----COMIENZA EL DIV DONDE SE AGREGARAN LOS NUEVOS PRODUCTOS A LA LISTA DE PRECIOS------>
+		<div id="fea" class="feature">
+			<div class="container">
+				<div class="col-md-7 feature-left">
+					<h3>Precios</h3>
+					<p class="head-para">Para un mejor servicio tenemos la lista de precios para consultar. </p>
+                    <button onClick="mostrar();">Ver Precios</button>
+                    <a href="#comp" style="text-decoration:none"><button>Agregar Producto</button></a>
+                    <button id="btnoculto" style="display:none" onClick="ocultar();">Ocultar lista</button>
+					
+				</div>
+				<div class="col-md-5 feature-right">
+                <div data-role="main" class="ui-content">
+                    <fieldset  data-theme="b" data-content-theme="b">
+                      <!--<legend>Productos</legend>
+                      <br>
+                      <div> Nombre del Producto
+                        <input type="text" id="txtName" placeholder="P.Ejem. Mazapan">
+                        Precio del Producto
+                        <input type="text" id="txtNumber" placeholder="Precio"> 
+                        Marca del Producto
+                        <input type="text" id="txtMarca" placeholder="Ricolino"> 
+                        Descripción del Producto
+                        <input type="text" id="txtDescrip" placeholder="P.Ejem. 200gr">                        
+                      </div>
+                      
+                      <div style="text-align: center">
+                        <button onClick="goInsert();">Insertar</button>
+                        <button onClick="goSearch();">Buscar</button>
+                        <button onClick="mostrar();">Mostrar lista</button>
+                        <button onClick="ocultar();">Ocultar lista</button>
+                      </div>-->
+                      <div style="display: none; width:100%" id="tblDiv"></div>
+                    </fieldset>
+                </div>
+					
+				</div>
+			</div>
+		</div>
+		<!-----FIN DEL DIV DEL AGRAGADO DE PRODUCTOS------>
+		<!----- AQUI COMIENZA EL DIV DE LA GALERIA DE PRODUCTOS----->
+		<div id="gall" class="gallery">
+			<div class="container">
+				<h3>Mira nuestros productos</h3>
+				<p>Te mostramos algunos de nuestros productos y marcas  que puedes encontrar con nosotros. </p>
+			</div>
+			<div id="owl-demo3" class="owl-carousel owl-carousel2">
+				                <div class="item">
+				                	<img class="lazyOwl" data-src="images/g1.jpg" alt="Lazy Owl Image">
+				                	<p class="img_slider"><span class="g-title">Dulces Vero </span> <a class="likes" href="#"><i class="fa fa-heart"> </i> MR </a></p>
+				                </div>
+				                 <div class="item">
+				                	<img class="lazyOwl" data-src="images/g2.jpg" alt="Lazy Owl Image">
+				                	<p class="img_slider"><span class="g-title">De la Rosa </span> <a class="likes" href="#"><i class="fa fa-heart"> </i> MR </a></p>
+				                </div>
+				                 <div class="item">
+				                	<img class="lazyOwl" data-src="images/g3.jpg" alt="Lazy Owl Image">
+				                	<p class="img_slider"><span class="g-title">Sonric's </span> <a class="likes" href="#"><i class="fa fa-heart"> </i> MR </a></p>
+				                </div>
+				                 <div class="item">
+				                	<img class="lazyOwl" data-src="images/g4.jpg" alt="Lazy Owl Image">
+				                	<p class="img_slider"><span class="g-title">Chupa Chups </span> <a class="likes" href="#"><i class="fa fa-heart"> </i> MR </a></p>
+				                </div>
+				                 <div class="item">
+				                	<img class="lazyOwl" data-src="images/g1.jpg" alt="Lazy Owl Image">
+				                	<p class="img_slider"><span class="g-title">Dulces Vero </span> <a class="likes" href="#"><i class="fa fa-heart"> </i> MR </a></p>
+				                </div>
+				                 <div class="item">
+				                	<img class="lazyOwl" data-src="images/g2.jpg" alt="Lazy Owl Image">
+				                	<p class="img_slider"><span class="g-title">De la Rosa </span> <a class="likes" href="#"><i class="fa fa-heart"> </i> MR </a></p>
+				                </div>
+				                 <div class="item">
+				                	<img class="lazyOwl" data-src="images/g3.jpg" alt="Lazy Owl Image">
+				                	<p class="img_slider"><span class="g-title">Sonric's </span> <a class="likes" href="#"><i class="fa fa-heart"> </i> MR </a></p>
+				                	<div class="clearfix"> </div>
+				                </div>
+				                <div class="item">
+				                	<img class="lazyOwl" data-src="images/g4.jpg" alt="Lazy Owl Image">
+				                	<p class="img_slider"><span class="g-title">Chupa Chups </span> <a class="likes" href="#"><i class="fa fa-heart"> </i> MR </a></p>
+				                	<div class="clearfix"> </div>
+				                </div>
+				                <div class="clearfix"> </div>
+				                
+			           </div>
+		</div>
+        <!----- TERMINA EL DIV DE LA GALERIA----->
+        <!-----DIV CON INFORMACIÓN SOBRE LA TIENDA----->
+		<div id="over" class="features text-center">
+			<div class="container">
+				<h2>Quienes somos?</h2>
+				<!---- AQUI SE CONTIENEN LOS DIV'S DE CADA INFORMACIÓN------>
+					<div class="features-grids text-center">
+						<div class="col-md-4 features-grid">
+							<span> </span>
+							<h3><a href="#">Nuestra Direccíon </a></h3>
+							<p>Encuentranos en Av. Francisco I. S/N. Col. Centro en Ajacuba Hgo. </p>
+						</div>
+						<div class="col-md-4 features-grid">
+							<span class="t-icon1"> </span>
+							<h3><a href="#">Dejando Huella</a></h3>
+							<p>Ofrecemos los mejores precios de la región y la mejor calidad en dulces.</p>
+						</div>
+						<div class="col-md-4 features-grid">
+							<span class="t-icon2"> </span>
+							<h3><a href="#">Nuestros Productos</a></h3>
+							<p>Manejamos las mejores marcas en los productos que buscas. </p>
+						</div>
+						<div class="clearfix"> </div>
+					</div>
+				<!---- FIN DE LOS DIV INFORMATIVOS------>
+			</div>
+		</div>
+		<!-----FIN DE LOS DIV'S CON INFORMACION SOBRE LA TIENDA----->
+		
+	
+		<!----- DIV DONDE SE ENCUENTRA EL FORMULARIO PARA AGREGAR PRODUCTOS----->
+		<div id="comp" class="compatibility">
+			<div class="container">
+				<h3>Agregar Productos</h3>
+				
+                <button onclick="verCampos()">Agregar</button>
+                 <fieldset id="campos" style="display: none"  data-theme="b" data-content-theme="b">
+                      <legend>Productos</legend>
+                      <br>
+                      <div> Nombre del Producto
+                        <input type="text" id="txtName" placeholder="P.Ejem. Mazapan">
+                        Precio del Producto
+                        <input type="text" id="txtNumber" placeholder="Precio"> 
+                        Marca del Producto
+                        <input type="text" id="txtMarca" placeholder="Ricolino"> 
+                        Descripción del Producto
+                        <input type="text" id="txtDescrip" placeholder="P.Ejem. 200gr">                        
+                      </div>
+                      
+                      <div style="text-align: center">
+                        <button onClick="goInsert();">Insertar</button>
+                        <a href="#fea" style="text-decoration:none"><button>Ir a la Lista de precios</button></a>
+                        <!--<button onClick="goSearch();">Buscar</button>
+                        <button onClick="mostrar();">Mostrar lista</button>
+                        <button onClick="ocultar();">Ocultar lista</button>-->
+                      </div>
+                      
+                    </fieldset>
+			</div>
+		</div>
+		<!----- FINAL DEL DIV DEL FORMULARIO DE AGREGADO DE PRODUCTOS----->
+		<!-----DIV DEL FOOTER----->
+		<div class="footer">
+			<div class="container">
+				<div class="col-md-7 footer-left">
+					<p>Creado por: <br><a href="#">Roberto Pérez Ramos</a> <br><a href="#">Brianda Jiménez López</a></p>
+				</div>
+				<div class="col-md-5 footer-right text-left">
+					
+                    <div class="col-md-7 footer-left">
+					<p> <a href="http://www.itsoeh.edu.mx/">ITSOEH</a></p>
+					</div>
+				</div>
+				<div class="clearfix"> </div>
+			</div>
+			<a href="#top" id="toTop" style="display: block;"> <span id="toTopHover" style="opacity: 1;"> </span></a>
+			<!---- start-smoth-scrolling---->
+			<script type="text/javascript">
+				$(function() {
+				  $('a[href*=#]:not([href=#])').click(function() {
+				    if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
+			
+				      var target = $(this.hash);
+				      target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+				      if (target.length) {
+				        $('html,body').animate({
+				          scrollTop: target.offset().top
+				        }, 1000);
+				        return false;
+				      }
+				    }
+				  });
+					});
+			</script>
+			<!---- //End-smoth-scrolling---->
+		</div>
+		<!-----//TERMINA EL FOOTER----->
+		<!--------->
+        <script src="js/ui.js"></script>
+	</body>
+</html>
+
