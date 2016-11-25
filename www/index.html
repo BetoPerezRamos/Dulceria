@@ -25,26 +25,33 @@
         // Wait for Cordova to load
         //
 		document.addEventListener("deviceready", onDeviceReady, false); //permite monitorear los metodos escuchantes .. "deviceready" escucha cuando el documento esta listo
+				
 		$("#tblDiv").hide();
+		$("#edicion").hide();
 		var currentRow;
 		// Creando las tablas de la base de datos
         //
 		function populateDB(tx) {  //tx es el objeto de conexion
-			alert("BASE DE DATOS CORRECTA!");
+			alert("BIENVENIDO!");
 			tx.executeSql('CREATE TABLE IF NOT EXISTS productos (id_producto INTEGER PRIMARY KEY AUTOINCREMENT, nombre, precio INTEGER, marca, descripcion)'); 
+			//tx.executeSql('CREATE TABLE IF NOT EXISTS usuario (id_usuario INTEGER PRIMARY KEY AUTOINCREMENT, nombre, pass)'); 
 
 			//tx.executeSql('SELECT * FROM examen', [], querySuccess, errorCB); // (seleccionar,generar arreglo, si esta bien ir a, si no ir a)
 		}
 		// Query the database
         //
+		
+		function insert2(){
+		
+		}
 		function queryDB(tx) {
 			
 			tx.executeSql('SELECT * FROM productos', [], querySuccess, errorCB);
-			}
+		}
 			
 		function searchQueryDB(tx) {
 			tx.executeSql("SELECT * FROM productos where nombre like ('%"+ document.getElementById("txtName").value + "%')",[], querySuccess, errorCB);
-				}
+		}
 				// Query the success callback
         //
 		function querySuccess(tx, results) { //tx:objeto de conexion, elementos resultantes de la seleccion)
@@ -118,7 +125,7 @@
 		}
         //Show the popup after tapping a row in table
         //
-		function goPopup(row,rowname,rownum) { //funcion que despliega los elemntos que seleccionaste, recibe tres cosas: fila, nombre fila, numero de fila
+		function goPopup(row,rowname,rownum,rowmarca,rowdescrip) { //funcion que despliega los elemntos que seleccionaste, recibe tres cosas: fila, nombre fila, numero de fila
 			currentRow=row;
 			document.getElementById("qrpopup").style.display="block"; //hace que se muestre sobre la pantalla principal
 			document.getElementById("editNameBox").value = rowname; // muestra el nombre del producto
@@ -139,19 +146,20 @@
 		}
 		function ocultar(){
 			$("#tblDiv").hide();
+			$("#edicion").hide();
 			$("#btnoculto").hide();
 			
 		}
 		function mostrar(){
 			$("#tblDiv").show();
+			$("#edicion").show();
 			$("#btnoculto").show();			
 			
 		}
 		function verCampos(){
 			$("#campos").toggle();
 		}
-</script>
-        
+</script>       
         
         <!--AQUI TERMINA LA CREACIÓN DE LA BASE DE DATOS-->
         
@@ -234,10 +242,10 @@
         <div id="qrpopup" >
           <hr/>
           Nombre:
-          <input type="text" id="editNameBox">
+          <input type="text" id="editNameBox" required>
           <br>
           Precio:
-          <input type="text" id="editNumberBox">
+          <input type="text" id="editNumberBox" required>
           <br>
           Marca:
           <input type="text" id="editMarcaBox">
@@ -245,9 +253,10 @@
           Descripción:
           <input type="text" id="editDescripBox">
           <br>
-          <button onclick="goDelete()">Eliminar</button>
-          <button onclick="goEdit()">Modificar</button>
-          <button onclick="document.getElementById('qrpopup').style.display='none';">Cancelar </button>
+          
+          <button class="ui-btn ui-icon-delete ui-btn-icon-left ui-corner-all ui-shadow" onclick="goDelete()">Eliminar</button>
+          <button class="ui-btn ui-icon-edit ui-btn-icon-left ui-corner-all ui-shadow" onclick="goEdit()">Modificar</button>
+          <button class="ui-btn ui-icon-back ui-btn-icon-left ui-corner-all ui-shadow" onclick="document.getElementById('qrpopup').style.display='none';">Cancelar </button>
    	   </div>
 		<!-----COMIENZO DEL ENCABEZADO SUPERIOR start-top-header----->
 		<div id="hello" class="top-header">
@@ -410,9 +419,9 @@
 				<div class="col-md-7 feature-left">
 					<h3>Precios</h3>
 					<p class="head-para">Para un mejor servicio tenemos la lista de precios para consultar. </p>
-                    <button onClick="mostrar();">Ver Precios</button>
-                    <a href="#comp" style="text-decoration:none"><button>Agregar Producto</button></a>
-                    <button id="btnoculto" style="display:none" onClick="ocultar();">Ocultar lista</button>
+                    <button class="ui-btn ui-icon-plus ui-btn-icon-left ui-corner-all ui-shadow" onClick="mostrar();">Ver Precios</button>
+                    <a href="#comp" style="text-decoration:none"><button class="ui-btn ui-icon-action ui-btn-icon-left ui-corner-all ui-shadow">Agregar Producto</button></a>
+                    <button class="ui-btn ui-icon-minus ui-btn-icon-left ui-corner-all ui-shadow" id="btnoculto" style="display:none" onClick="ocultar();">Ocultar lista</button>
 					
 				</div>
 				<div class="col-md-5 feature-right">
@@ -436,6 +445,7 @@
                         <button onClick="mostrar();">Mostrar lista</button>
                         <button onClick="ocultar();">Ocultar lista</button>
                       </div>-->
+                      <p id="edicion">Selecciona un producto para modificarlo o eliminarlo</p>
                       <div style="display: none; width:100%" id="tblDiv"></div>
                     </fieldset>
                 </div>
@@ -524,14 +534,14 @@
 			<div class="container">
 				<h3>Agregar Productos</h3>
 				
-                <button onclick="verCampos()">Agregar</button>
+                <button class="ui-btn ui-icon-bullets ui-btn-icon-left ui-corner-all ui-shadow" onclick="verCampos()">Agregar</button>
                  <fieldset id="campos" style="display: none"  data-theme="b" data-content-theme="b">
                       <legend>Productos</legend>
                       <br>
                       <div> Nombre del Producto
-                        <input type="text" id="txtName" placeholder="P.Ejem. Mazapan">
+                        <input type="text" id="txtName" placeholder="P.Ejem. Mazapan" required>
                         Precio del Producto
-                        <input type="text" id="txtNumber" placeholder="Precio"> 
+                        <input type="text" id="txtNumber" placeholder="Precio" required> 
                         Marca del Producto
                         <input type="text" id="txtMarca" placeholder="Ricolino"> 
                         Descripción del Producto
@@ -539,8 +549,8 @@
                       </div>
                       
                       <div style="text-align: center">
-                        <button onClick="goInsert();">Insertar</button>
-                        <a href="#fea" style="text-decoration:none"><button>Ir a la Lista de precios</button></a>
+                        <button class="ui-btn ui-icon-check ui-btn-icon-left ui-corner-all ui-shadow" onClick="goInsert();">Insertar</button>
+                        <a href="#fea" style="text-decoration:none"><button class="ui-btn ui-icon-carat-u ui-btn-icon-left ui-corner-all ui-shadow">Ir a la Lista de precios</button></a>
                         <!--<button onClick="goSearch();">Buscar</button>
                         <button onClick="mostrar();">Mostrar lista</button>
                         <button onClick="ocultar();">Ocultar lista</button>-->
